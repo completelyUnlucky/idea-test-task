@@ -71,12 +71,14 @@ public class Main {
             }
         }
 
+        Collections.sort(prices);
         int average = prices.stream().mapToInt(Integer::intValue).sum() / prices.size();
-        int median = prices.stream()
-                .sorted()
-                .skip(prices.size() / 2)
-                .findFirst()
-                .get();
+        int median;
+        if (prices.size() % 2 == 0) {
+            median = (prices.get(prices.size() / 2 - 1) + prices.get(prices.size() / 2)) / 2;
+        } else {
+            median = prices.get(prices.size() / 2 + 1);
+        }
 
         return average - median;
     }
