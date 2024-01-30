@@ -2,7 +2,7 @@
 
 ## Ответы на вопросы
 1. {SU=6h 0m, S7=6h 30m, TK=5h 50m, BA=8h 5m}
-2. 360
+2. 460
 
 ## Запуск из командной строки Linux
 1. git clone https://github.com/completelyUnlucky/idea-test-task/
