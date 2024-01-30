@@ -4,19 +4,13 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 
 public class Main {
-
-    private static final File file = new File("src/main/resources/tickets.json");
 
     public static long getTimeInMinutes(String time1, String time2) throws Exception {
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yy HH:mm");
@@ -30,7 +24,7 @@ public class Main {
     }
 
     public static Map<String, String> getMinTime() throws Exception {
-        Map<String, String> map = new HashMap<>();
+        Map<String, String> minTimeMap = new HashMap<>();
 
         InputStream fileReader = Main.class.getResourceAsStream("/tickets.json");
 
@@ -46,44 +40,43 @@ public class Main {
 
             if (node.get("origin").asText().equals("VVO") &&
                     node.get("destination").asText().equals("TLV")) {
-                if (map.get(node.get("carrier").asText()) != null &&
-                        Long.parseLong(map.get(node.get("carrier").asText())) < getTimeInMinutes(time1, time2)) {
-                    map.replace(node.get("carrier").asText(), String.valueOf(getTimeInMinutes(time1, time2)));
+                if (minTimeMap.get(node.get("carrier").asText()) != null) {
+                      if (Long.parseLong(minTimeMap.get(node.get("carrier").asText())) > getTimeInMinutes(time1, time2)) {
+                          minTimeMap.replace(node.get("carrier").asText(), String.valueOf(getTimeInMinutes(time1, time2)));
+                      }
                 } else {
-                    map.put(node.get("carrier").asText(), Long.toString(getTimeInMinutes(time1, time2)));
+                    minTimeMap.put(node.get("carrier").asText(), Long.toString(getTimeInMinutes(time1, time2)));
                 }
             }
         }
-        return map;
+        minTimeMap.replaceAll((carrier, minutes) -> String.format("%dh %dm",
+                Integer.parseInt(minutes) / 60,
+                Integer.parseInt(minutes) % 60)
+        );
+        return minTimeMap;
     }
 
-    public static long getMedianAndAverageDiff() throws Exception {
+    public static int getMedianAndAverageDiff() throws Exception {
 
         InputStream fileReader = Main.class.getResourceAsStream("/tickets.json");
-
         BufferedReader bufferedFileReader =
                 new BufferedReader(new InputStreamReader(Objects.requireNonNull(fileReader)));
-
         JsonNode jsonNode = new ObjectMapper().readTree(bufferedFileReader);
 
-        long median = 0L;
-        long sum = 0L;
+        List<Integer> prices = new ArrayList<>();
 
         for (JsonNode node : jsonNode.get("tickets")) {
-
-            if (node.get("origin").asText().equals("VVO") &&
-                    node.get("destination").asText().equals("TLV")) {
-                if (jsonNode.get("tickets").size() % 2 == 1) {
-                    median = Long.parseLong(String.valueOf(jsonNode.get("tickets").get(jsonNode.get("tickets").size() / 2).get("price")));
-                } else {
-                    median = (Long.parseLong(String.valueOf(jsonNode.get("tickets").get(jsonNode.get("tickets").size() / 2).get("price"))) +
-                            Long.parseLong(String.valueOf(jsonNode.get("tickets").get(jsonNode.get("tickets").size() / 2 + 1).get("price")))) / 2;
-                }
-                sum += Long.parseLong(String.valueOf(node.get("price")));
+            if (node.get("origin").asText().equals("VVO") && node.get("destination").asText().equals("TLV")) {
+                prices.add(Integer.parseInt(node.get("price").asText()));
             }
         }
 
-        long average = sum / jsonNode.get("tickets").size();
+        int average = prices.stream().mapToInt(Integer::intValue).sum() / prices.size();
+        int median = prices.stream()
+                .sorted()
+                .skip(prices.size() / 2)
+                .findFirst()
+                .get();
 
         return average - median;
     }

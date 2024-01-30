@@ -1,8 +1,8 @@
 # Тестовое задание
 
 ## Ответы на вопросы
-1. {SU=405, S7=605, TK=555, BA=485} (Числа это время в минутах)
-2. -11867
+1. {SU=6h 0m, S7=6h 30m, TK=5h 50m, BA=8h 5m}
+2. 360
 
 ## Запуск из командной строки Linux
 1. git clone https://github.com/completelyUnlucky/idea-test-task/
